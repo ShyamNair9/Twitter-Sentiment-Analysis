@@ -6,6 +6,9 @@ This project is aimed at analyzing sentiments of tweets on Twitter, wherein a ke
 
 This project is designed using JavaScript, Amazon Web Services, Python.
 
+##Architecture Diagram
+Screen Shot 2017-11-27 at 12.03.14 PM
+
 ## Functionality
 
 ### Fetching tweets
