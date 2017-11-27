@@ -12,7 +12,7 @@ This project is designed using JavaScript, Amazon Web Services and Python
 We use an SQS Queue to fetch real-time tweets using Twitter Streaming API upon confirming geolocation info and language is English.
 
 ### Lambda function to fetch tweets from SQS and trigger SNS
-On selecting a keyword through the front-end UI dropdown a request is sent to the API Gateway which triggers an AWS Lambda function and carries out the functionality of filtering the tweets with given keyword from the already generated SQS Queue and performs a sentiment analysis using the MonkeyLearn API. Once the sentiment is analyzed, a new tweet is formed and inserted into a new SQS queue. Following this the SNS notification response is prepared which acts as a trigger for the next Lambda function.
+On selecting a keyword through the front-end UI dropdown, a request is sent to the API Gateway which triggers an AWS Lambda function and carries out the functionality of filtering the tweets with given keyword from the already generated SQS Queue and performs a sentiment analysis using the MonkeyLearn API. Once the sentiment is analyzed, a new tweet is formed and inserted into a new SQS queue. Following this the SNS notification response is prepared which acts as a trigger for the next Lambda function.
 
 ### Lambda function to submit tweets onto ElasticSearch
 The second SQS queue acts as a buffer between the two Lambda functions, as the second Lambda function(triggered via the SNS) fetches tweets from the second SQS Queue and is then indexed in Amazon's Elastic Search.
