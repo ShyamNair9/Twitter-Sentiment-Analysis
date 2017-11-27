@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+<title>Tweet Trends</title>
+     <head>
+          <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+          <script src="https://sdk.amazonaws.com/js/aws-sdk-2.154.0.min.js"></script>
+          <style>
+           h4 {
+            color: #FFCA28; 
+            background: rgba(0, 0, 0, .80); 
+            font-size: 175px; 
+            line-height: 75px; 
+            font-weight: 500; 
+            margin: 0 5px 24px; 
+            float: center; 
+            padding: 24px; 
+            font-size: 50px; 
+            font-weight: lighter; 
+            line-height: 48px; 
+            text-align: left; 
+            text-shadow: 1px 1px 2px #082b94;
+          }
+            body {
+                background-color: #1C2841;
+            }
+            div.container{
+                width: 1300px;
+                background-color: rgba(0, 0, 0,.10);
+                margin: auto;
+                margin-top: 120px;
+            }
+            #map {
+              height: 100%;
+            }
+      </style>
+     </head>
+     <body>
+      <a href="index.html" color="#FFCA28"><h4> TwitterTrendMap </h4></a>
+
+<form align="center">
+
+     <select id="hashtag" name ="hashtag">
+      <option value="">Search BY keyword</option>
+      <option value="NewYork">New York</option>
+      <option value="photo">photo</option>
+      <option value="trump">trump</option>
+      <option value="thanksgiving">thanksgiving</option>
+      <option value="missuniverse">missuniverse</option>
+      <option value="world cup">world cup</option>
+      <option value="Hiring">hiring</option>
+      <option value="Football">football</option>
+    </select>
+     <button type="submit" name="submit">Submit</button>
+</form>
+<p align="center" color="#FFCA28">Select keyword to view LIVEFEED of sentiments on the world map</p>
+<div align="center"class="container">
+    <div align="center"id="googleMap" style="width:90%;height:600px;"></div>
+<div id="map"></div>
+<script type="text/javascript">
+var api = 'https://e5gazwkk79.execute-api.us-west-2.amazonaws.com/prod/sqs';
+var tweets;
+var map;
+ 
+var global_number_of_tweets=0
+var global_key = "";
+
+$("form").submit(function(event){
+  event.preventDefault();
+  var key = $("#hashtag").val();
+  global_key = key;
+  var tagged_url = api+"?hashtag="+key
+  console.log(tagged_url)
+      
+  $.ajax({
+    type: 'GET',
+    url: tagged_url,
+    success: function(data) {
+      tweets = data;
+		}
+	});
+        
+  var xhttp = new XMLHttpRequest();
+	xhttp.open( "GET","https://search-tweettrends-quwhy4tzdisvz7vd5e2qhq5o5i.us-west-2.es.amazonaws.com/final/_search?size=10000")
+	xhttp.send()
+	xhttp.onreadystatechange = function() { 
+   	if(xhttp.status==200 && xhttp.readyState == 4){
+      var response = xhttp.responseText;
+      var jsonResponse = JSON.parse(response);
+      var json = jsonResponse["hits"]["hits"];
+          
+      map = new google.maps.Map(document.getElementById('googleMap'),{
+        center: new google.maps.LatLng(49.04350, 4.9579),
+        zoom: 2
+      });
+          
+      var jsonLength = json.length;
+      console.log(jsonLength);
+  
+		  for (i=0; i< jsonLength; i++) {
+		    //console.log(i);
+        var source = json[i]._source;
+        var place = source.Place;
+        var sentiment = source.Sentiment;
+        var tweet = source.Tweet.toString();
+        var lat = parseFloat(source.Latitude);
+        var longitude = parseFloat(source.Longitude);
+
+        if (tweet.includes(key)){
+            global_number_of_tweets = global_number_of_tweets + 1;
+          var latlng= new google.maps.LatLng(lat,longitude);
+		      //console.log(latlng);
+
+          if(sentiment.toString()=='positive'){
+            //console.log(lat, longitude, place, sentiment, tweet);
+            var marker = new google.maps.Marker({
+            position: latlng,
+                icon:"http://maps.google.com/mapfiles/kml/paddle/go-lv.png",
+                map: map
+                });
+               
+                var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                var infowindow = new google.maps.InfoWindow()
+
+              google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+              return function() {
+                infowindow.setContent(content);
+                infowindow.open(map,marker);
+              };
+              }) (marker,content,infowindow));
+              
+              }
+	  
+              if(sentiment.toString()=='neutral'){
+               //console.log(lat, longitude, place, sentiment, tweet);
+                var marker = new google.maps.Marker({
+                  position: latlng,
+                  icon:"http://maps.google.com/mapfiles/kml/paddle/pause-lv.png",
+                  map: map
+                });
+                 
+                 var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                var infowindow = new google.maps.InfoWindow()
+
+              google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+              return function() {
+                infowindow.setContent(content);
+                infowindow.open(map,marker);
+              };
+              }) (marker,content,infowindow));
+
+              }
+
+              if(sentiment.toString()=='negative'){
+                //console.log(lat, longitude, place, sentiment, tweet);
+                var marker = new google.maps.Marker({
+                position: latlng,
+                icon:"http://maps.google.com/mapfiles/kml/paddle/stop-lv.png",
+                map: map
+                });
+                
+                var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                var infowindow = new google.maps.InfoWindow()
+
+              google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+              return function() {
+                infowindow.setContent(content);
+                infowindow.open(map,marker);
+              };
+              }) (marker,content,infowindow));
+
+              }
+            }
+            
+          }
+          console.log("Global: " + global_number_of_tweets.toString());
+        }
+    }
+});
+setInterval(function() {
+    if(global_key != "") {
+        var tagged_url = api+"?hashtag="+global_key;
+        $.ajax({
+            type: 'GET',
+            url: tagged_url,
+            success: function(data) {
+                tweets = data;
+            }
+        });
+
+        var temp_counter = 0;
+        var xhttp = new XMLHttpRequest();
+        xhttp.open( "GET","https://search-tweettrends-quwhy4tzdisvz7vd5e2qhq5o5i.us-west-2.es.amazonaws.com/final/_search?size=10000")
+        xhttp.send()
+        xhttp.onreadystatechange = function() { 
+            if(xhttp.status==200 && xhttp.readyState == 4){
+                var response = xhttp.responseText;
+                var jsonResponse = JSON.parse(response);
+                var json = jsonResponse["hits"]["hits"];
+              
+                map = new google.maps.Map(document.getElementById('googleMap'),{
+                    center: new google.maps.LatLng(49.04350, 4.9579),
+                    zoom: 2
+                });
+              
+                var jsonLength = json.length;
+                //console.log(jsonLength);
+      
+                for (i=0; i< jsonLength; i++) {
+                    //console.log(i);
+                    var source = json[i]._source;
+                    var place = source.Place;
+                    var sentiment = source.Sentiment;
+                    var tweet = source.Tweet.toString();
+                    var lat = parseFloat(source.Latitude);
+                    var longitude = parseFloat(source.Longitude);
+
+                    if (tweet.includes(global_key)){
+                        temp_counter = temp_counter + 1;
+                        var latlng= new google.maps.LatLng(lat,longitude);
+                        //console.log(latlng);
+
+                        if(sentiment.toString()=='positive'){
+                            //console.log(lat, longitude, place, sentiment, tweet);
+                            var marker = new google.maps.Marker({
+                            position: latlng,
+                                icon:"http://maps.google.com/mapfiles/kml/paddle/go-lv.png",
+                                map: map
+                                });
+                   
+                            var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                            var infowindow = new google.maps.InfoWindow()
+
+                            google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+                                return function() {
+                                    infowindow.setContent(content);
+                                    infowindow.open(map,marker);
+                                };
+                            }) (marker,content,infowindow));
+                  
+                        }
+        
+                        if(sentiment.toString()=='neutral'){
+                            //console.log(lat, longitude, place, sentiment, tweet);
+                            var marker = new google.maps.Marker({
+                                position: latlng,
+                                icon:"http://maps.google.com/mapfiles/kml/paddle/pause-lv.png",
+                                map: map
+                            });
+                     
+                            var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                            var infowindow = new google.maps.InfoWindow()
+
+                            google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+                                return function() {
+                                    infowindow.setContent(content);
+                                    infowindow.open(map,marker);
+                                };
+                            }) (marker,content,infowindow));
+
+                        }
+
+                        if(sentiment.toString()=='negative'){
+                            //console.log(lat, longitude, place, sentiment, tweet);
+                                var marker = new google.maps.Marker({
+                                position: latlng,
+                                icon:"http://maps.google.com/mapfiles/kml/paddle/stop-lv.png",
+                                map: map
+                            });
+                    
+                            var content = "<u>Tweet</u> " + tweet + "<br/><u>Country</u> " + place + "<br/><u>Sentiment</u> " + sentiment   
+                            var infowindow = new google.maps.InfoWindow()
+
+                            google.maps.event.addListener(marker,'click', (function(marker,content,infowindow){ 
+                                return function() {
+                                    infowindow.setContent(content);
+                                    infowindow.open(map,marker);
+                                };
+                            }) (marker,content,infowindow));
+
+                        }
+                    }
+                    
+                }
+                console.log("Temp: " + temp_counter.toString());
+                if (temp_counter > global_number_of_tweets) {
+                    alert("Notification: New Tweets are present for this keyword");
+                }
+            }
+        }
+    }
+  
+        
+    
+
+}, 10000);
+               
+</script>
+<script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD-nsMPz4dIJ4lHSr8GB3pwK2KlUt51VVE&callback">
+    </script>
+</body>
+</html>
+
+
+
