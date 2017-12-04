@@ -30,7 +30,7 @@ RED for negative, YELLOW for neutral and GREEN for positive.
 ### Notifications
 The front-end polls the back end ElasticSearch at reguar intervals in the background for the same keyword requested from the user and compares the count of tweets generated globally during the execution versus the fresh count, incase of new tweets, user receives a notification as below
 
-![Alt text](Notifications.png?raw=true "Landing")
+![Alt text](Notification.png?raw=true "Landing")
 
 #### The final website is hosted on Amazon's S3 Client on this link 
 #### https://s3-us-west-2.amazonaws.com/twittersentiments/index.html
